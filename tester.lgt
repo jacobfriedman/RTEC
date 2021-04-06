@@ -9,6 +9,10 @@
 	logtalk_load(basic_types(loader)),
 	% load the unit test tool
 	logtalk_load(lgtunit(loader)),
+
+	logtalk_load(os(loader)), 
+
+
 	% load your application files (e.g. "source.lgt") enabling support for
 	% code coverage, which requires compilation in debug mode and collecting
 	% source data information; if code coverage is not required, remove the

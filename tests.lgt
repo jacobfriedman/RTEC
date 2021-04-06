@@ -16,6 +16,8 @@
 	% cover(my_other_object).
 	% ...
 
+	
+
 	% several test dialects are supported with the most simple one being
 	% test/1; its argument is the test name, which must be unique in a
 	% test suite object; the test goal must succeed for the test to be

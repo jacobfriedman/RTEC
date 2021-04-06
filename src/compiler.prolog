@@ -11,50 +11,55 @@
  ***************************************************************************************************/
 
 % these predicates are defined in this file
-:- discontiguous compileHoldsAtTree/3, findChildren/3. 
+:- discontiguous([compileHoldsAtTree/3, findChildren/3]). 
 
-:- dynamic initially/1, initiatedAt/2, initiatedAt/4, terminatedAt/2, terminatedAt/4, initiates/3, terminates/3, happensAt/2, holdsFor/2, holdsAt/2, grounding/1.
+:- dynamic([
+	initially/1,
+	initiatedAt/2,
+	initiatedAt/4, terminatedAt/2, terminatedAt/4, initiates/3, 
+	terminates/3, happensAt/2, holdsFor/2, holdsAt/2, grounding/1
+]).
 
 
-compileEventDescription(Declarations, InputDescription, OutputDescription) :- 
+compile_event_description(Declarations, Input_Description, Output_Description) :- 
 	consult(Declarations),
-	consult(InputDescription),
-	tell(OutputDescription),
+	consult(Input_Description),
+	tell(Output_Description),
 	% compile initially/1 rules	
-	compileInitially.
+	compile_initially.
 
 % compile initiatedAt/2 rules
-compileEventDescription(_, _, _) :- compileInitiatedAt.
+compile_event_description(_, _, _) :- compileInitiatedAt.
 % compile terminatedAt/2 rules
-compileEventDescription(_, _, _) :- compileTerminatedAt.
+compile_event_description(_, _, _) :- compileTerminatedAt.
 % compile initiates/3 rules
-compileEventDescription(_, _, _) :- compileInitiates.
+compile_event_description(_, _, _) :- compileInitiates.
 % compile terminates/3 rules
-compileEventDescription(_, _, _) :- compileTerminates.
+compile_event_description(_, _, _) :- compileTerminates.
 % compile holdsFor/2 rules
-compileEventDescription(_, _, _) :- compileHoldsFor.
+compile_event_description(_, _, _) :- compileHoldsFor.
 % compile holdsAt/2 rules
-compileEventDescription(_, _, _) :- compileHoldsAt.
+compile_event_description(_, _, _) :- compileHoldsAt.
 % compile happensAt/2 rules
-compileEventDescription(_, _, _) :- compileHappensAt.
+compile_event_description(_, _, _) :- compileHappensAt.
 % compile cachingOrder/1 declarations:
 % combine cachingOrder/1, grounding/1 and indexOf/2 to produce cachingOrder2/2
-compileEventDescription(_, _, _) :- compileCachingOrder.
+compile_event_description(_, _, _) :- compileCachingOrder.
 % compile collectIntervals/1 declarations: 
 % combine collectIntervals/1, grounding/1 and indexOf/2 to produce collectIntervals2/2
-compileEventDescription(_, _, _) :- compileCollectIntervals.
+compile_event_description(_, _, _) :- compileCollectIntervals.
 % compile buildFromPoints/1 declarations:
 % combine buildFromPoints/1, grounding/1 and indexOf/2 to produce buildFromPoints2/2
-compileEventDescription(_, _, _) :- compileBuildFromPoints.
-compileEventDescription(_, InputDescription, _) :- compileAnythingElse(InputDescription).
+compile_event_description(_, _, _) :- compileBuildFromPoints.
+compile_event_description(_, Input_Description, _) :- compileAnythingElse(Input_Description).
 % close the new event description file
-compileEventDescription(_, _, _) :-  told, !.
+compile_event_description(_, _, _) :-  told, !.
 
 
 % compile initially/1 rules
-compileInitially :-
+compile_initially :-
 	clause(initially(F=V), Body),	
-	\+ var(F),
+	nonvar(F),
 	T = -1,
 	(
 		Body = (true),
@@ -70,7 +75,7 @@ compileInitially :-
 % compile initiatedAt/2 rules 
 compileInitiatedAt :-
 	clause(initiatedAt(F=V,T), Body),
-	\+ var(F),	
+	nonvar(F),	
 	(
 	    	cyclic(F=V),
 	    	compileConditions(Body, NewBody, [T1, T2], true)
@@ -84,7 +89,7 @@ compileInitiatedAt :-
 % In this case, we assume the author treats timespans correctly inside the rule body 
 compileInitiatedAt :-
 	clause(initiatedAt(F=V,T1,T,T2), Body),
-	\+ var(F),    	
+	nonvar(F),    	
 	(
 		cyclic(F=V),
 	    	compileConditions(Body, NewBody, [], true)
@@ -97,7 +102,7 @@ compileInitiatedAt :-
 % compile terminatedAt/2 rules 
 compileTerminatedAt :-
 	clause(terminatedAt(F=V,T), Body),
-	\+ var(F),
+	nonvar(F),
 	(
 		cyclic(F=V),
 		compileConditions(Body, NewBody, [T1, T2], true)
@@ -111,7 +116,7 @@ compileTerminatedAt :-
 % In this case, we assume the author treats timespans correctly inside the rule body
 compileTerminatedAt :-
 	clause(terminatedAt(F=V,T1,T,T2), Body),
-	\+ var(F),
+	nonvar(F),
 	(
 	   	cyclic(F=V),
 	    	compileConditions(Body, NewBody, [], true)
@@ -124,7 +129,7 @@ compileTerminatedAt :-
 % compile initiates/3 rules
 compileInitiates :-
 	clause(initiates(E,F=V,T), (Body)),
-	\+ var(F),	
+	nonvar(F),	
 	(
 	    	cyclic(F=V),
 	    	compileConditions((happensAt(E,T),Body), NewBody, [T1, T2], true)
@@ -137,7 +142,7 @@ compileInitiates :-
 % compile terminates/3 rules
 compileTerminates :-
 	clause(terminates(E,F=V,T), (Body)),
-	\+ var(F),	
+	nonvar(F),	
 	(
 	    	cyclic(F=V),
 	    	compileConditions((happensAt(E,T),Body), NewBody, [T1, T2], true)
@@ -153,7 +158,7 @@ compileHoldsFor :-
 	clause(holdsFor(F=V,I), Body),	
 	% the condition below makes sure that we do not compile rules from RTEC.prolog 
 	% or any other domain-independent code
-	\+ var(F),
+	nonvar(F),
 	compileConditions(Body, NewBody, [], false),	
 	writeCompiledRule('holdsFor', [F=V,I], NewBody), fail.
 	
@@ -163,7 +168,7 @@ compileHoldsAt :-
 	clause(holdsAt(F=V,_T), Body),	
 	% the condition below makes sure that we do not compile rules from RTEC.prolog 
 	% or any other domain-independent code
-	\+ var(F),
+	nonvar(F),
 	compileHoldsAtTree(Body, NewBody, I),	
 	writeCompiledRule('holdsFor', [F=V,I], NewBody), fail.
 
@@ -173,7 +178,7 @@ compileHappensAt :-
 	clause(happensAt(E,T), Body),	
 	% the condition below makes sure that we do not compile rules from RTEC.prolog 
 	% or any other domain-independent code
-	\+ var(E),
+	nonvar(E),
 	compileConditions(Body, NewBody, [], false),	
 	writeCompiledRule('happensAt', [E,T], NewBody), fail.
 

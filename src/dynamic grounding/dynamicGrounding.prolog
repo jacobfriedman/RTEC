@@ -1,6 +1,6 @@
 
 % ordered lists and set operations
-:-use_module(library(ordsets)).
+:- use_module(library(ordsets)).
 
 % dynamicGrounding(+Ts,+Te)
 % perform dynamic grounding in (Ts,Te]
